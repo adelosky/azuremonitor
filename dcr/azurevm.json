@@ -1,0 +1,65 @@
+{
+  "location": "< your-workspace-region >",
+  "properties": {
+    "dataSources": {
+      "performanceCounters": [
+        {
+          "name": "perfCounters",
+          "streams": [ "Microsoft-Perf" ],
+          "counterSpecifiers": [
+            "\\Processor(_Total)\\% Processor Time",
+            "\\Processor(_Total)\\% User Time",
+            "\\Processor(_Total)\\% Privileged Time",
+            "\\Processor(_Total)\\Interrupts/sec",
+            "\\System\\Processor Queue Length",
+            "\\Memory\\Available MBytes",
+            "\\Memory\\% Committed Bytes In Use",
+            "\\Memory\\Pages/sec",
+            "\\LogicalDisk(_Total)\\% Free Space",
+            "\\LogicalDisk(_Total)\\% Disk Time",
+            "\\LogicalDisk(_Total)\\Avg. Disk sec/Transfer",
+            "\\LogicalDisk(_Total)\\Disk Transfers/sec",
+            "\\LogicalDisk(_Total)\\Disk Reads/sec",
+            "\\LogicalDisk(_Total)\\Disk Writes/sec",
+            "\\Network Interface(*)\\Bytes Total/sec",
+            "\\Network Interface(*)\\Packets/sec",
+            "\\Network Interface(*)\\Packets Received Errors",
+            "\\Network Interface(*)\\Packets Outbound Errors"
+          ],
+          "samplingFrequencyInSeconds": 60
+        }
+      ],
+      "windowsEventLogs": [
+        {
+          "name": "eventLogs",
+          "streams": [ "Microsoft-WindowsEvent" ],
+          "xPathQueries": [
+            "Application!*[System[(Level=1 or Level=2)]]",
+            "System!*[System[(Level=1 or Level=2)]]",
+            "Security!*[System[(Level=1 or Level=2)]]"
+          ]
+        }
+      ],
+      "extensions": [
+        {
+          "name": "vmHeartbeat",
+          "streams": [ "Microsoft-VMHeartbeat" ]
+        }
+      ]
+    },
+    "destinations": {
+      "logAnalytics": [
+        {
+          "name": "< your-workspace-name >",
+          "workspaceResourceId": "/subscriptions/<your-subscription-id>/resourceGroups/<your-resource-group>/providers/Microsoft.OperationalInsights/workspaces/<your-workspace-name>"
+        }
+      ]
+    },
+    "dataFlows": [
+      {
+        "streams": [ "Microsoft-Perf", "Microsoft-WindowsEvent", "Microsoft-VMHeartbeat" ],
+        "destinations": [ "<your-workspace-name>" ]
+      }
+    ]
+  }
+}
