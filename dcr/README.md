@@ -20,7 +20,7 @@ az monitor data-collection rule create --location '<rule_region>' --resource-gro
 ```
 
 
-## Data collection rule associations (DCRAs)
+# Data collection rule associations (DCRAs)
 
 Data collection rule associations (DCRAs) are created between the resource and the DCR to enable certain data collection scenarios. This is a many-to-many relationship, where a single DCR can be associated with multiple resources and a single resource can be associated with up to 30 DCRs. This allows you to develop a strategy for maintaining your monitoring across sets of resources with different requirements.
 
@@ -35,9 +35,8 @@ From the DCR in the Azure portal, select **Policies (Preview)**. This opens a pa
 
 :::image type="content" source="media/data-collection-rule-view/data-collection-rule-policies.png" alt-text="Screenshot of DCR policies view." lightbox="media/data-collection-rule-view/data-collection-rule-policies.png":::
 
-To create a new assignment, click either **Assign Policy** or **Assign Initiative**. 
+### Create a DCRA through Azure Policy 
 
-:::image type="content" source="media/data-collection-rule-view/data-collection-rule-new-policy.png" alt-text="Screenshot of new policy assignment blade." lightbox="media/data-collection-rule-view/data-collection-rule-new-policy.png":::
 
 | Setting | Description |
 |:--------|:------------|
@@ -54,3 +53,4 @@ Once an assignment is created, you can view its details by clicking on it. This 
 
 > [!IMPORTANT]
 > The assignment won't be applied to existing resources until you create a remediation task. For more information, see [Remediate noncompliant resources with Azure Policy](/azure/governance/policy/how-to/remediate-resources).
+
