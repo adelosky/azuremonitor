@@ -9,8 +9,9 @@ Specific advantages of DCR-based data collection include:
 * Scalable configuration options supporting infrastructure as code and DevOps processes.
 * Option of Azure Monitor pipeline in your own environment to provide high-end scalability, layered network configurations, and periodic connectivity.
 
-The JSON files included in this repo contain the recommended baseline metrics for the particular Azure services you want to monitor, based on [Azure Monitor Baseline Alerts] (https://azure.github.io/azure-monitor-baseline-alerts/welcome/) standards.
+The JSON files included in this repo contain the recommended baseline metrics for the particular Azure services you want to monitor, based on [Azure Monitor Baseline Alerts](https://azure.github.io/azure-monitor-baseline-alerts/welcome/) standards.
 
 ## Data collection rule associations (DCRAs)
 
 Data collection rule associations (DCRAs) are created between the resource and the DCR to enable certain data collection scenarios. This is a many-to-many relationship, where a single DCR can be associated with multiple resources and a single resource can be associated with up to 30 DCRs. This allows you to develop a strategy for maintaining your monitoring across sets of resources with different requirements.
+
