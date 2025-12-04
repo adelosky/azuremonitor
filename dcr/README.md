@@ -78,5 +78,6 @@ az policy remediation create `
 
 > [!IMPORTANT]
 > The policy assignment uses system-assigned managed identity for deployment permissions.
+>
 > The policy is assigned at subscription level but can be scoped to resource groups.
 
