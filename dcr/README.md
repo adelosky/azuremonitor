@@ -32,23 +32,51 @@ Using [Azure Policy](/azure/governance/policy/overview), you can associate a DCR
 > An **initiative** is a collection of policies that are grouped together to achieve a specific goal or purpose. For example, there's an initiative called **Configure Windows machines to run Azure Monitor Agent and associate them to a Data Collection Rule** that includes multiple policies to install and configure the Azure Monitor agent.
 
 
-### Create a DCRA through Azure Policy 
+### Create a DCRA through Azure Policy with CLI
 
+1. First, ensure you have the necessary Data Collection Rule (DCR) resource ID:
+```azurecli
+# Get the DCR resource ID
+$dcrResourceId = az monitor data-collection rule show `
+    --resource-group "your-resource-group" `
+    --data-collection-rule-name "your-dcr-name" `
+    --query "id" `
+    --output tsv
+```
+2. Use the built in policy initiatives to associate Windows Arc-enabled servers to the DCR:
+```azurecli
+az policy assignment create `
+    --name "configure-windows-arc-dcr" `
+    --display-name "Configure Windows Arc-enabled machines with DCR" `
+    --policy-set-definition "9575b8b7-78ab-4281-b53b-d3c1ace2260b" `
+    --scope "/subscriptions/$subscriptionId" `
+    --params "{\"dataCollectionRuleResourceId\": {\"value\": \"$dcrResourceId\"}}" `
+    --mi-system-assigned `
+    --location "<your-region>"
+```
+3. Verify policy assignments.
+```azurecli
+# Check policy assignment
+az policy assignment show `
+    --name "arc-dcr-assignment" `
+    --scope "/subscriptions/$subscriptionId"
 
-| Setting | Description |
-|:--------|:------------|
-| Subscription | The subscription with the resource group to use as the scope. |
-| Resource group | The resource group to use as the scope. The DCR gets assigned to all resource in this resource group, depending on the resource group managed by the definition. |
-| Policy/Initiative definition | The definition to assign. The dropdown includes all definitions in the subscription that accept DCR as a parameter. |
-| Assignment Name | A name for the assignment. Must be unique in the subscription. |
-| Description | Optional description of the assignment. |
-| Policy Enforcement | The policy is only applied if enforcement is enabled. If disabled, only assessments for the policy are performed. |
+# Check compliance status
+az policy state list `
+    --scope "/subscriptions/$subscriptionId" `
+    --filter "(isCompliant eq false) and (policyAssignmentName eq 'arc-dcr-assignment')"
+```
+4. Trigger remediation (if needed):
+```azurecli
+# Create remediation task for non-compliant resources
+az policy remediation create `
+    --name "arc-dcr-remediation" `
+    --policy-assignment "arc-dcr-assignment" `
+    --scope "/subscriptions/$subscriptionId"
+```
 
-Once an assignment is created, you can view its details by clicking on it. This allows you to edit the details of the assignment and also to create a remediation task.
-
-:::image type="content" source="media/data-collection-rule-view/data-collection-rule-assignment-details.png" alt-text="Screenshot of assignment details." lightbox="media/data-collection-rule-view/data-collection-rule-assignment-details.png":::
 
 > [!IMPORTANT]
-> The assignment won't be applied to existing resources until you create a remediation task. For more information, see [Remediate noncompliant resources with Azure Policy](/azure/governance/policy/how-to/remediate-resources).
-
+> The policy assignment uses system-assigned managed identity for deployment permissions.
+> The policy is assigned at subscription level but can be scoped to resource groups.
 

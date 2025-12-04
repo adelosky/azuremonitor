@@ -1,0 +1,85 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.HybridCompute/machines"
+        },
+        {
+          "field": "Microsoft.HybridCompute/machines/osName",
+          "in": ["Windows", "Linux"]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+        "name": "[concat('dcr-association-', parameters('dataCollectionRuleName'))]",
+        "roleDefinitionIds": [
+          "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+          "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+        ],
+        "existenceCondition": {
+          "field": "Microsoft.Insights/dataCollectionRuleAssociations/dataCollectionRuleId",
+          "equals": "[parameters('dataCollectionRuleId')]"
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "dataCollectionRuleId": {
+                  "type": "string"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+                  "apiVersion": "2021-09-01-preview",
+                  "scope": "[concat('Microsoft.HybridCompute/machines/', parameters('vmName'))]",
+                  "name": "[concat('dcr-association-', uniqueString(parameters('dataCollectionRuleId')))]",
+                  "properties": {
+                    "description": "Association of data collection rule with Arc-enabled server",
+                    "dataCollectionRuleId": "[parameters('dataCollectionRuleId')]"
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "dataCollectionRuleId": {
+                "value": "[parameters('dataCollectionRuleId')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "dataCollectionRuleId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Data Collection Rule ID",
+        "description": "Resource ID of the Data Collection Rule to associate with Arc-enabled servers"
+      }
+    },
+    "dataCollectionRuleName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Data Collection Rule Name",
+        "description": "Name of the Data Collection Rule"
+      }
+    }
+  }
+}
