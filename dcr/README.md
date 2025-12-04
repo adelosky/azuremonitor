@@ -31,9 +31,6 @@ Using [Azure Policy](/azure/governance/policy/overview), you can associate a DCR
 > 
 > An **initiative** is a collection of policies that are grouped together to achieve a specific goal or purpose. For example, there's an initiative called **Configure Windows machines to run Azure Monitor Agent and associate them to a Data Collection Rule** that includes multiple policies to install and configure the Azure Monitor agent.
 
-From the DCR in the Azure portal, select **Policies (Preview)**. This opens a page that lists any assignments with the current DCR and the compliance state of included resources. Tiles across the top provide compliance metrics for all resources and assignments.
-
-:::image type="content" source="media/data-collection-rule-view/data-collection-rule-policies.png" alt-text="Screenshot of DCR policies view." lightbox="media/data-collection-rule-view/data-collection-rule-policies.png":::
 
 ### Create a DCRA through Azure Policy 
 
@@ -53,4 +50,5 @@ Once an assignment is created, you can view its details by clicking on it. This 
 
 > [!IMPORTANT]
 > The assignment won't be applied to existing resources until you create a remediation task. For more information, see [Remediate noncompliant resources with Azure Policy](/azure/governance/policy/how-to/remediate-resources).
+
 
