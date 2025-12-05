@@ -1,0 +1,43 @@
+{
+  "location": "<region>",
+  "properties": {
+    "dataSources": {
+      "extensions": [
+        {
+          "streams": [
+            "Microsoft-ContainerInsights-Cluster",
+            "Microsoft-ContainerInsights-Node",
+            "Microsoft-ContainerInsights-Pod",
+            "Microsoft-ContainerInsights-ContainerLog",
+            "Microsoft-ContainerInsights-Perf",
+            "Microsoft-ContainerInsights-KubeEvents"
+          ],
+          "extensionName": "ContainerInsights"
+        }
+      ]
+    },
+    "destinations": {
+      "logAnalytics": [
+        {
+          "workspaceResourceId": "<LogAnalyticsWorkspaceResourceID>",
+          "name": "la-workspace"
+        }
+      ]
+    },
+    "dataFlows": [
+      {
+        "streams": [
+          "Microsoft-ContainerInsights-Cluster",
+          "Microsoft-ContainerInsights-Node",
+          "Microsoft-ContainerInsights-Pod",
+          "Microsoft-ContainerInsights-ContainerLog",
+          "Microsoft-ContainerInsights-Perf",
+          "Microsoft-ContainerInsights-KubeEvents"
+        ],
+        "destinations": [
+          "la-workspace"
+        ]
+      }
+    ]
+  }
+}
