@@ -18,8 +18,13 @@ Use the following command to create a Data Collection Rule (DCR) and use the rel
 
 Use the _az monitor data-collection rule create_ command to create a DCR from your JSON file. You can use this same command to update an existing DCR.
 
-```azurecli
-az monitor data-collection rule create --location '<rule_region>' --resource-group '<my-resource-group>' --name '<my-dcr-name>' --rule-file '<path_to_DCR_json_file' --description '<my-descriptive-name>'
+```powershell
+az monitor data-collection rule create `
+    --location '<rule_region>' `
+    --resource-group '<my-resource-group>' `
+    --name '<my-dcr-name>' `
+    --rule-file '<path_to_DCR_json_file>' `
+    --description '<my-descriptive-name>'
 ```
 
 
