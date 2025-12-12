@@ -43,10 +43,10 @@ param(
     [string]$DataCollectionRuleName,
     
     [Parameter(Mandatory = $false)]
-    [string]$PolicyAssignmentName = "arc-dcr-assignment",
+    [string]$PolicyAssignmentName,
     
     [Parameter(Mandatory = $false)]
-    [string]$Location = "East US",
+    [string]$Location,
     
     [Parameter(Mandatory = $false)]
     [switch]$UseBuiltInPolicies
@@ -125,100 +125,106 @@ if ($UseBuiltInPolicies) {
 } else {
     Write-Host "🏗️ Creating custom policy definition..." -ForegroundColor Cyan
     
-    # Create the policy definition JSON
-    $policyDefinition = @"
+    # Create the policy definition JSON (rules only, without mode)
+    $policyRules = @"
 {
-  "mode": "Indexed",
-  "policyRule": {
-    "if": {
-      "allOf": [
-        {
-          "field": "type",
-          "equals": "Microsoft.HybridCompute/machines"
-        },
-        {
-          "field": "Microsoft.HybridCompute/machines/osName",
-          "in": ["Windows", "Linux"]
-        }
-      ]
-    },
-    "then": {
-      "effect": "deployIfNotExists",
-      "details": {
-        "type": "Microsoft.Insights/dataCollectionRuleAssociations",
-        "name": "[concat('dcr-association-', parameters('dataCollectionRuleName'))]",
-        "roleDefinitionIds": [
-          "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
-          "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
-        ],
-        "existenceCondition": {
-          "field": "Microsoft.Insights/dataCollectionRuleAssociations/dataCollectionRuleId",
-          "equals": "[parameters('dataCollectionRuleId')]"
-        },
-        "deployment": {
-          "properties": {
-            "mode": "incremental",
-            "template": {
-              "`$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-              "contentVersion": "1.0.0.0",
-              "parameters": {
-                "vmName": {
-                  "type": "string"
-                },
-                "dataCollectionRuleId": {
-                  "type": "string"
-                }
-              },
-              "resources": [
-                {
-                  "type": "Microsoft.Insights/dataCollectionRuleAssociations",
-                  "apiVersion": "2021-09-01-preview",
-                  "scope": "[concat('Microsoft.HybridCompute/machines/', parameters('vmName'))]",
-                  "name": "[concat('dcr-association-', uniqueString(parameters('dataCollectionRuleId')))]",
-                  "properties": {
-                    "description": "Association of data collection rule with Arc-enabled server",
-                    "dataCollectionRuleId": "[parameters('dataCollectionRuleId')]"
-                  }
-                }
-              ]
-            },
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.HybridCompute/machines"
+      },
+      {
+        "field": "Microsoft.HybridCompute/machines/osName",
+        "in": ["Windows", "Linux"]
+      }
+    ]
+  },
+  "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+      "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+      "name": "[concat('dcr-association-', parameters('dataCollectionRuleName'))]",
+      "roleDefinitionIds": [
+        "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+        "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+      ],
+      "existenceCondition": {
+        "field": "Microsoft.Insights/dataCollectionRuleAssociations/dataCollectionRuleId",
+        "equals": "[parameters('dataCollectionRuleId')]"
+      },
+      "deployment": {
+        "properties": {
+          "mode": "incremental",
+          "template": {
+            "`$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
             "parameters": {
               "vmName": {
-                "value": "[field('name')]"
+                "type": "string"
               },
               "dataCollectionRuleId": {
-                "value": "[parameters('dataCollectionRuleId')]"
+                "type": "string"
               }
+            },
+            "resources": [
+              {
+                "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+                "apiVersion": "2021-09-01-preview",
+                "scope": "[concat('Microsoft.HybridCompute/machines/', parameters('vmName'))]",
+                "name": "[concat('dcr-association-', uniqueString(parameters('dataCollectionRuleId')))]",
+                "properties": {
+                  "description": "Association of data collection rule with Arc-enabled server",
+                  "dataCollectionRuleId": "[parameters('dataCollectionRuleId')]"
+                }
+              }
+            ]
+          },
+          "parameters": {
+            "vmName": {
+              "value": "[field('name')]"
+            },
+            "dataCollectionRuleId": {
+              "value": "[parameters('dataCollectionRuleId')]"
             }
           }
         }
-      }
-    }
-  },
-  "parameters": {
-    "dataCollectionRuleId": {
-      "type": "String",
-      "metadata": {
-        "displayName": "Data Collection Rule ID",
-        "description": "Resource ID of the Data Collection Rule to associate with Arc-enabled servers"
-      }
-    },
-    "dataCollectionRuleName": {
-      "type": "String",
-      "metadata": {
-        "displayName": "Data Collection Rule Name",
-        "description": "Name of the Data Collection Rule"
       }
     }
   }
 }
 "@
 
-    # Save policy definition to temporary file
-    $tempPolicyFile = [System.IO.Path]::GetTempFileName() + ".json"
-    $policyDefinition | Out-File -FilePath $tempPolicyFile -Encoding UTF8
+    # Create the policy parameters JSON
+    $policyParameters = @"
+{
+  "dataCollectionRuleId": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Data Collection Rule ID",
+      "description": "Resource ID of the Data Collection Rule to associate with Arc-enabled servers"
+    }
+  },
+  "dataCollectionRuleName": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Data Collection Rule Name",
+      "description": "Name of the Data Collection Rule"
+    }
+  }
+}
+"@
+
+    # Save policy rules to temporary file
+    $tempRulesFile = [System.IO.Path]::GetTempFileName() + ".json"
+    $policyRules | Out-File -FilePath $tempRulesFile -Encoding UTF8
     
-    Write-Host "📄 Policy definition saved to: $tempPolicyFile" -ForegroundColor Yellow
+    # Save policy parameters to temporary file  
+    $tempParametersFile = [System.IO.Path]::GetTempFileName() + ".json"
+    $policyParameters | Out-File -FilePath $tempParametersFile -Encoding UTF8
+    
+    Write-Host "📄 Policy rules saved to: $tempRulesFile" -ForegroundColor Yellow
+    Write-Host "📄 Policy parameters saved to: $tempParametersFile" -ForegroundColor Yellow
     
     # Create the policy definition
     Write-Host "📝 Creating custom policy definition..." -ForegroundColor Cyan
@@ -226,34 +232,59 @@ if ($UseBuiltInPolicies) {
         --name "arc-servers-dcr-assignment" `
         --display-name "Deploy Data Collection Rule Association for Arc-enabled Servers" `
         --description "Automatically associate Arc-enabled servers with specified Data Collection Rule" `
-        --rules $tempPolicyFile `
+        --rules $tempRulesFile `
+        --params $tempParametersFile `
         --mode "Indexed"
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to create policy definition"
-        Remove-Item $tempPolicyFile -Force
+        Remove-Item $tempRulesFile -Force
+        Remove-Item $tempParametersFile -Force
         exit 1
     }
     
     Write-Host "📝 Assigning custom policy..." -ForegroundColor Cyan
+    
+    # Create assignment parameters JSON
+    $assignmentParameters = @"
+{
+  "dataCollectionRuleId": {
+    "value": "$dcrResourceId"
+  },
+  "dataCollectionRuleName": {
+    "value": "$DataCollectionRuleName"
+  }
+}
+"@
+    
+    # Save assignment parameters to temporary file
+    $tempAssignmentParamsFile = [System.IO.Path]::GetTempFileName() + ".json"
+    $assignmentParameters | Out-File -FilePath $tempAssignmentParamsFile -Encoding UTF8
+    
+    Write-Host "📄 Assignment parameters saved to: $tempAssignmentParamsFile" -ForegroundColor Yellow
+    
     az policy assignment create `
         --name $PolicyAssignmentName `
         --display-name "Assign DCR to Arc-enabled Servers" `
         --description "Automatically assigns Data Collection Rules to Arc-enabled Virtual Machines" `
         --scope "/subscriptions/$SubscriptionId" `
         --policy "arc-servers-dcr-assignment" `
-        --params "{\"dataCollectionRuleId\": {\"value\": \"$dcrResourceId\"}, \"dataCollectionRuleName\": {\"value\": \"$DataCollectionRuleName\"}}" `
+        --params $tempAssignmentParamsFile `
         --mi-system-assigned `
         --location $Location
     
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to assign policy"
-        Remove-Item $tempPolicyFile -Force
+        Remove-Item $tempRulesFile -Force
+        Remove-Item $tempParametersFile -Force
+        Remove-Item $tempAssignmentParamsFile -Force
         exit 1
     }
     
-    # Clean up temporary file
-    Remove-Item $tempPolicyFile -Force
+    # Clean up temporary files
+    Remove-Item $tempRulesFile -Force
+    Remove-Item $tempParametersFile -Force
+    Remove-Item $tempAssignmentParamsFile -Force
     
     Write-Host "✅ Custom policy created and assigned successfully" -ForegroundColor Green
 }

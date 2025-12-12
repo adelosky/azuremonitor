@@ -16,7 +16,7 @@ Use the following command to create a Data Collection Rule (DCR) and use the rel
 
 ### Create or edit DCR with CLI
 
-Use the _az monitor data-collection rule create_ command to create a DCR from your JSON file. You can use this same command to update an existing DCR.
+Run the _deploy-monitor-dcr.ps1_ script using the example below.  Choose the appropriate _resourcemetrics_ JSON file for the resource type you want to monitor with your Data Collection Rule.
 
 ```powershell
 az monitor data-collection rule create `
@@ -26,64 +26,6 @@ az monitor data-collection rule create `
     --rule-file '<path_to_DCR_json_file>' `
     --description '<my-descriptive-name>'
 
-Here's a complete PowerShell script to create a DCR:
-
-```powershell
-# create-dcr.ps1
-# Script to create an Azure Monitor Data Collection Rule
-
-# Parameters
-param(
-    [Parameter(Mandatory=$true)]
-    [string]$ResourceGroup,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$DcrName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$Location,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$RuleFilePath,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$Description = "Data Collection Rule for Azure Monitor"
-)
-
-# Validate JSON file exists
-if (-not (Test-Path $RuleFilePath)) {
-    Write-Error "Rule file not found at: $RuleFilePath"
-    exit 1
-}
-
-Write-Host "Creating Data Collection Rule: $DcrName" -ForegroundColor Cyan
-Write-Host "Resource Group: $ResourceGroup" -ForegroundColor Cyan
-Write-Host "Location: $Location" -ForegroundColor Cyan
-
-try {
-    # Create the DCR
-    $dcr = az monitor data-collection rule create `
-        --location $Location `
-        --resource-group $ResourceGroup `
-        --name $DcrName `
-        --rule-file $RuleFilePath `
-        --description $Description `
-        --output json | ConvertFrom-Json
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "`nData Collection Rule created successfully!" -ForegroundColor Green
-        Write-Host "DCR Resource ID: $($dcr.id)" -ForegroundColor Green
-    }
-    else {
-        Write-Error "Failed to create Data Collection Rule"
-        exit 1
-    }
-}
-catch {
-    Write-Error "Error creating DCR: $_"
-    exit 1
-}
-```
 
 **Usage example:**
 
@@ -159,4 +101,73 @@ az policy remediation create `
 > The policy assignment uses system-assigned managed identity for deployment permissions.
 >
 > The policy is assigned at subscription level but can be scoped to resource groups.
+
+
+## Troubleshooting Common DCR Deployment Issues
+
+### Issue: Invalid Stream Error
+**Error:** `'Streams' stream 'Microsoft-VMHeartbeat' must be one of the allowed streams`
+
+**Cause:** The `Microsoft-VMHeartbeat` stream is not a valid stream name in DCR configurations.
+
+**Solution:** Remove the VMHeartbeat extension configuration. VM heartbeat functionality is automatically handled by Azure Monitor Agent and doesn't need to be explicitly configured in the DCR.
+
+```json
+// Remove this section from your DCR:
+"extensions": [
+  {
+    "name": "vmHeartbeat",
+    "streams": [ "Microsoft-VMHeartbeat" ]
+  }
+]
+```
+
+### Issue: Invalid Output Table Error
+**Error:** `Table for output stream 'Microsoft-WindowsEvent' is not available for destination`
+
+**Cause:** The Event table doesn't exist yet in your Log Analytics workspace. This table is automatically created when Azure Monitor Agent first starts collecting Windows Event Logs.
+
+**Solution:** Deploy your DCR with only performance counters initially, then add Windows Event Logs after the table is created.
+
+1. **Initial deployment** - Remove Windows Event Logs from your DCR:
+```json
+// Comment out or remove this section temporarily:
+"windowsEventLogs": [
+  {
+    "name": "eventLogs",
+    "streams": [ "Microsoft-WindowsEvent" ],
+    "xPathQueries": [
+      "Application!*[System[(Level=1 or Level=2)]]",
+      "System!*[System[(Level=1 or Level=2)]]",
+      "Security!*[System[(Level=1 or Level=2)]]"
+    ]
+  }
+]
+```
+
+2. **Update dataFlows** to only include performance counters:
+```json
+"dataFlows": [
+  {
+    "streams": [ "Microsoft-Perf" ],
+    "destinations": [ "your-workspace-name" ]
+  }
+]
+```
+
+3. **After Azure Monitor Agent is installed and running** (usually within a few hours), add Windows Event Logs back to your DCR configuration and update the dataFlows to include `"Microsoft-WindowsEvent"`.
+
+### Issue: Missing Extension Name
+**Error:** `'ExtensionName' must not be empty`
+
+**Cause:** Extensions in DCR require both `name` and `extensionName` properties.
+
+**Solution:** Either provide the proper extension configuration or remove the extensions section if not needed. For most scenarios, you don't need custom extensions.
+
+### Best Practices
+- Start with minimal DCR configuration (performance counters only)
+- Deploy Azure Monitor Agent to VMs first
+- Wait for tables to be created in Log Analytics workspace
+- Gradually add more data sources (Windows Event Logs, custom logs, etc.)
+- Test DCR deployment in a development environment first
 

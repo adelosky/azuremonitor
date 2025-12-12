@@ -1,5 +1,5 @@
 {
-  "location": "< your-workspace-region >",
+  "location": "eastus2",
   "properties": {
     "dataSources": {
       "performanceCounters": [
@@ -28,37 +28,20 @@
           ],
           "samplingFrequencyInSeconds": 60
         }
-      ],
-      "windowsEventLogs": [
-        {
-          "name": "eventLogs",
-          "streams": [ "Microsoft-WindowsEvent" ],
-          "xPathQueries": [
-            "Application!*[System[(Level=1 or Level=2)]]",
-            "System!*[System[(Level=1 or Level=2)]]",
-            "Security!*[System[(Level=1 or Level=2)]]"
-          ]
-        }
-      ],
-      "extensions": [
-        {
-          "name": "vmHeartbeat",
-          "streams": [ "Microsoft-VMHeartbeat" ]
-        }
       ]
     },
     "destinations": {
       "logAnalytics": [
         {
-          "name": "< your-workspace-name >",
-          "workspaceResourceId": "/subscriptions/<your-subscription-id>/resourceGroups/<your-resource-group>/providers/Microsoft.OperationalInsights/workspaces/<your-workspace-name>"
+          "name": "DefaultWorkspace-3c8d076d-2e9e-458c-bbb4-221d46d5546b-EUS2",
+          "workspaceResourceId": "/subscriptions/3c8d076d-2e9e-458c-bbb4-221d46d5546b/resourceGroups/DefaultResourceGroup-EUS2/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-3c8d076d-2e9e-458c-bbb4-221d46d5546b-EUS2"
         }
       ]
     },
     "dataFlows": [
       {
-        "streams": [ "Microsoft-Perf", "Microsoft-WindowsEvent", "Microsoft-VMHeartbeat" ],
-        "destinations": [ "<your-workspace-name>" ]
+        "streams": [ "Microsoft-Perf" ],
+        "destinations": [ "DefaultWorkspace-3c8d076d-2e9e-458c-bbb4-221d46d5546b-EUS2" ]
       }
     ]
   }
