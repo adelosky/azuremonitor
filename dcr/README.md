@@ -189,6 +189,8 @@ This repository also contains pre-built Azure Monitor Workbooks that complement 
   - License management and cost optimization insights
   - Tag-based organizational reporting
   - Real-time instance and database metrics
+- **Required RBAC**:
+  - Users will need the Azure Monitor Workbook Contributor role to the resource group where the shared workbook resource will be saved.
 
 This workbook provides immediate monitoring capabilities for Arc-enabled SQL servers without requiring DCR deployment, making it an excellent complement to performance metric collection via DCRs.
 
