@@ -2,6 +2,9 @@
 
 Data collection rules (DCRs) are part of an [Extract, transform, and load (ETL)](/azure/architecture/data-guide/relational-data/etl)-like data collection process that improves on legacy data collection methods for Azure Monitor. This process uses a common data ingestion strategy for all data sources and a standard method of configuration that's more manageable and scalable than previous collection methods.
 
+> [!TIP]
+> **For Arc-enabled SQL Server monitoring**, check out the companion **Azure Monitor Workbook** in the `artifacts/` folder. The `ArcSQLServerMonitorWorkbook.json` provides comprehensive dashboards for SQL Server inventory, security, licensing, and configuration analysis using Resource Graph queries.
+
 Specific advantages of DCR-based data collection include:
 
 * Consistent method for configuration of different data sources.
@@ -170,4 +173,22 @@ az policy remediation create `
 - Wait for tables to be created in Log Analytics workspace
 - Gradually add more data sources (Windows Event Logs, custom logs, etc.)
 - Test DCR deployment in a development environment first
+
+## Related Monitoring Resources
+
+### Azure Monitor Workbooks
+This repository also contains pre-built Azure Monitor Workbooks that complement DCR-based data collection:
+
+**Arc-enabled SQL Server Monitoring Workbook**
+- **Location**: `../artifacts/ArcSQLServerMonitorWorkbook.json`
+- **Purpose**: Comprehensive monitoring dashboard for Arc-enabled SQL Server instances
+- **Data Source**: Azure Resource Graph (no DCR required)
+- **Key Features**:
+  - SQL Server inventory and configuration analysis
+  - Security and compliance monitoring (Azure Defender, encryption status)
+  - License management and cost optimization insights
+  - Tag-based organizational reporting
+  - Real-time instance and database metrics
+
+This workbook provides immediate monitoring capabilities for Arc-enabled SQL servers without requiring DCR deployment, making it an excellent complement to performance metric collection via DCRs.
 
