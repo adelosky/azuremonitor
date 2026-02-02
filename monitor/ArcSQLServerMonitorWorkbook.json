@@ -75,7 +75,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Count of all Arc-enabled SQL Server instances\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| summarize Servers=count()",
+        "query": "// Count of all Arc-enabled SQL Server instances\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Servers=count()",
         "size": 3,
         "title": "SQL Server Instances",
         "subtitle": "Total Arc-enabled SQL Server instances",
@@ -96,7 +96,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Count of all databases across Arc-enabled SQL Server instances\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n{ResourceGroup:filters}\n| count",
+        "query": "// Count of all databases across Arc-enabled SQL Server instances\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| count",
         "size": 3,
         "title": "SQL Server Databases",
         "subtitle": "Total databases across all instances",
@@ -117,7 +117,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Count of protected instances by Azure Defender\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| where tostring(properties['azureDefenderStatus']) == \"Protected\"\n| count",
+        "query": "// Count of protected instances by Azure Defender\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| where tostring(properties['azureDefenderStatus']) == \"Protected\"\n| count",
         "size": 3,
         "title": "Defender Protected",
         "subtitle": "Instances protected by Azure Defender",
@@ -160,7 +160,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Count of encrypted databases\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n{ResourceGroup:filters}\n| where tostring(properties['databaseOptions'].isEncrypted) == \"true\"\n| count",
+        "query": "// Count of encrypted databases\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| where tostring(properties['databaseOptions'].isEncrypted) == \"true\"\n| count",
         "size": 3,
         "title": "Encrypted Databases",
         "subtitle": "Databases with encryption enabled",
@@ -181,7 +181,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Database details per SQL Server instance\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n{ResourceGroup:filters}\n| summarize \n    Databases=count(),\n    OfflineDBs=sum(toint(iif(tostring(properties[\"state\"]) != \"Online\", 1, 0))),\n    TotalSizeMB=sum(toint(iif(tostring(properties[\"sizeMB\"]) != \"\", properties[\"sizeMB\"], 0))) \n    by Instance = tostring(split(tostring(id), \"/\")[8])\n| extend TotalSizeGB = round(TotalSizeMB / 1024.0, 2)\n| project Instance, Databases, OfflineDBs, TotalSizeGB\n| order by TotalSizeGB desc \n| take 20",
+        "query": "// Database details per SQL Server instance\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize \n    Databases=count(),\n    OfflineDBs=sum(toint(iif(tostring(properties[\"state\"]) != \"Online\", 1, 0))),\n    TotalSizeMB=sum(toint(iif(tostring(properties[\"sizeMB\"]) != \"\", properties[\"sizeMB\"], 0))) \n    by Instance = tostring(split(tostring(id), \"/\")[8])\n| extend TotalSizeGB = round(TotalSizeMB / 1024.0, 2)\n| project Instance, Databases, OfflineDBs, TotalSizeGB\n| order by TotalSizeGB desc \n| take 20",
         "size": 0,
         "title": "Database Details per SQL Server Instance",
         "subtitle": "Top 20 instances by database size",
@@ -221,7 +221,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server versions distribution\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend version = tostring(properties['version'])\n| summarize Count=count() by version\n| order by version asc",
+        "query": "// SQL Server versions distribution\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend version = tostring(properties['version'])\n| summarize Count=count() by version\n| order by version asc",
         "size": 0,
         "title": "SQL Server Versions",
         "subtitle": "Distribution of SQL Server versions",
@@ -239,7 +239,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server editions distribution\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| summarize Count=count() by Edition=tostring(properties['edition'])\n| order by Count desc",
+        "query": "// SQL Server editions distribution\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Count=count() by Edition=tostring(properties['edition'])\n| order by Count desc",
         "size": 0,
         "title": "SQL Server Editions",
         "subtitle": "Distribution by SQL Server edition",
@@ -257,7 +257,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Database compatibility levels\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n{ResourceGroup:filters}\n| summarize Count=count() by CompatibilityLevel=tostring(properties['compatibilityLevel'])\n| order by Count desc",
+        "query": "// Database compatibility levels\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Count=count() by CompatibilityLevel=tostring(properties['compatibilityLevel'])\n| order by Count desc",
         "size": 0,
         "title": "Database Compatibility Levels",
         "subtitle": "Distribution of database compatibility levels",
@@ -281,7 +281,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Azure Defender for SQL status\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| summarize Count=count() by DefenderStatus=iff(tostring(properties['azureDefenderStatus'])==\"Unknown\", \"Not Protected\", tostring(properties['azureDefenderStatus']))\n| order by Count desc",
+        "query": "// Azure Defender for SQL status\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Count=count() by DefenderStatus=iff(tostring(properties['azureDefenderStatus'])==\"Unknown\", \"Not Protected\", tostring(properties['azureDefenderStatus']))\n| order by Count desc",
         "size": 0,
         "title": "Azure Defender for SQL Server",
         "subtitle": "Protection status distribution",
@@ -299,7 +299,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Database encryption status\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n{ResourceGroup:filters}\n| summarize Count=count() by Encrypted=iif(tostring(properties['databaseOptions'].isEncrypted)==\"false\", \"No\", \"Yes\")",
+        "query": "// Database encryption status\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Count=count() by Encrypted=iif(tostring(properties['databaseOptions'].isEncrypted)==\"false\", \"No\", \"Yes\")",
         "size": 0,
         "title": "Database Encryption Status",
         "subtitle": "Encrypted vs non-encrypted databases",
@@ -324,7 +324,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server edition classification\nresources\n| where type == 'microsoft.azurearcdata/sqlserverinstances'\n{ResourceGroup:filters}\n| extend version = tostring(properties.version)\n| extend edition = properties.edition\n| extend containerId = tolower(tostring(properties.containerResourceId))\n| extend serverClass = iff(edition in (\"Enterprise\", \"Standard\"), \"Enterprise/Standard\", \"Express/Developer/Other\") \n| summarize count() by serverClass",
+        "query": "// SQL Server edition classification\nresources\n| where type == 'microsoft.azurearcdata/sqlserverinstances'\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend version = tostring(properties.version)\n| extend edition = properties.edition\n| extend containerId = tolower(tostring(properties.containerResourceId))\n| extend serverClass = iff(edition in (\"Enterprise\", \"Standard\"), \"Enterprise/Standard\", \"Express/Developer/Other\") \n| summarize count() by serverClass",
         "size": 0,
         "title": "SQL Server Edition Classification",
         "subtitle": "Enterprise/Standard vs other editions",
@@ -342,7 +342,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instance license summary\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend d=parse_json(properties) \n| extend Patch=d[\"patchLevel\"]\n| extend SQLVersion=d[\"version\"]\n| extend Edition=d[\"edition\"]\n| extend License=d[\"licenseType\"]\n| summarize InstanceCount=count() by License=tostring(License), Edition=tostring(Edition)\n| order by InstanceCount desc",
+        "query": "// SQL Server instance license summary\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend d=parse_json(properties) \n| extend Patch=d[\"patchLevel\"]\n| extend SQLVersion=d[\"version\"]\n| extend Edition=d[\"edition\"]\n| extend License=d[\"licenseType\"]\n| summarize InstanceCount=count() by License=tostring(License), Edition=tostring(Edition)\n| order by InstanceCount desc",
         "size": 0,
         "title": "Instance License Summary",
         "subtitle": "License type and edition distribution",
@@ -360,7 +360,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Extension license type distribution\nresources\n| where type == \"microsoft.hybridcompute/machines/extensions\"\n| where properties.type in (\"WindowsAgent.SqlServer\", \"LinuxAgent.SqlServer\")\n{ResourceGroup:filters}\n| summarize Count=count() by LicenseType=tostring(properties.settings.LicenseType)",
+        "query": "// Extension license type distribution\nresources\n| where type == \"microsoft.hybridcompute/machines/extensions\"\n| where properties.type in (\"WindowsAgent.SqlServer\", \"LinuxAgent.SqlServer\")\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| summarize Count=count() by LicenseType=tostring(properties.settings.LicenseType)",
         "size": 0,
         "title": "Extension License Types",
         "subtitle": "Arc extension license distribution",
@@ -385,7 +385,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instances by Application tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend application = tostring(tags.Application)\n| where isnotempty(application)\n| summarize ServerCount = count() by application\n| order by ServerCount desc",
+        "query": "// SQL Server instances by Application tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend application = tostring(tags.Application)\n| where isnotempty(application)\n| summarize ServerCount = count() by application\n| order by ServerCount desc",
         "size": 0,
         "title": "SQL Server Instances by Application",
         "subtitle": "Distribution by 'Application' tag",
@@ -403,7 +403,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instances by Location tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend location = tostring(tags.Location)\n| where isnotempty(location)\n| summarize ServerCount = count() by location\n| order by ServerCount desc",
+        "query": "// SQL Server instances by Location tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend location = tostring(tags.Location)\n| where isnotempty(location)\n| summarize ServerCount = count() by location\n| order by ServerCount desc",
         "size": 0,
         "title": "SQL Server Instances by Location",
         "subtitle": "Distribution by 'Location' tag",
@@ -421,7 +421,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instances by DataCenter tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend dataCenter = tostring(tags.DataCenter)\n| where isnotempty(dataCenter)\n| summarize ServerCount = count() by dataCenter\n| order by ServerCount desc",
+        "query": "// SQL Server instances by DataCenter tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend dataCenter = tostring(tags.DataCenter)\n| where isnotempty(dataCenter)\n| summarize ServerCount = count() by dataCenter\n| order by ServerCount desc",
         "size": 0,
         "title": "SQL Server Instances by Data Center",
         "subtitle": "Distribution by 'DataCenter' tag",
@@ -439,7 +439,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instances by Business Unit tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend businessUnit = tostring(tags.BusinessUnit)\n| where isnotempty(businessUnit)\n| summarize ServerCount = count() by businessUnit\n| order by ServerCount desc",
+        "query": "// SQL Server instances by Business Unit tag\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend businessUnit = tostring(tags.BusinessUnit)\n| where isnotempty(businessUnit)\n| summarize ServerCount = count() by businessUnit\n| order by ServerCount desc",
         "size": 0,
         "title": "SQL Server Instances by Business Unit",
         "subtitle": "Distribution by 'BusinessUnit' tag",
@@ -464,7 +464,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// Detailed SQL Server instance inventory\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n{ResourceGroup:filters}\n| extend d=parse_json(properties)\n| project \n    Name = name,\n    ResourceGroup = resourceGroup,\n    Location = location,\n    Version = tostring(d[\"version\"]),\n    Edition = tostring(d[\"edition\"]),\n    PatchLevel = tostring(d[\"patchLevel\"]),\n    LicenseType = tostring(d[\"licenseType\"]),\n    DefenderStatus = tostring(d[\"azureDefenderStatus\"]),\n    ContainerResourceId = tostring(d[\"containerResourceId\"])\n| order by Name asc",
+        "query": "// Detailed SQL Server instance inventory\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup:value}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend d=parse_json(properties)\n| project \n    Name = name,\n    ResourceGroup = resourceGroup,\n    Location = location,\n    Version = tostring(d[\"version\"]),\n    Edition = tostring(d[\"edition\"]),\n    PatchLevel = tostring(d[\"patchLevel\"]),\n    LicenseType = tostring(d[\"licenseType\"]),\n    DefenderStatus = tostring(d[\"azureDefenderStatus\"]),\n    ContainerResourceId = tostring(d[\"containerResourceId\"])\n| order by Name asc",
         "size": 0,
         "title": "SQL Server Instance Inventory",
         "subtitle": "Detailed information for all Arc-enabled SQL Server instances",
