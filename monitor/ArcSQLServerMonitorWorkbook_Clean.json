@@ -1,0 +1,171 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Arc - SQL Server Monitoring Workbook\n\nThis workbook provides comprehensive insights into your Arc-enabled SQL Server estate, including inventory, configuration, security, and compliance status.\n\n---"
+      },
+      "name": "title"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Overview Metrics"
+      },
+      "name": "overview-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| summarize Servers=count()",
+        "size": 3,
+        "title": "SQL Server Instances",
+        "subtitle": "Total Arc-enabled SQL Server instances",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "card",
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "25",
+      "name": "instance-count"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| count",
+        "size": 3,
+        "title": "SQL Server Databases",
+        "subtitle": "Total databases across all instances",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "card",
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "25",
+      "name": "database-count"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where tostring(properties['azureDefenderStatus']) == \"Protected\"\n| count",
+        "size": 3,
+        "title": "Defender Protected",
+        "subtitle": "Instances protected by Azure Defender",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "card",
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "25",
+      "name": "defender-protected-count"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| where tostring(properties['databaseOptions'].isEncrypted) == \"true\"\n| count",
+        "size": 3,
+        "title": "Encrypted Databases",
+        "subtitle": "Databases with encryption enabled",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "card",
+        "textSettings": {
+          "style": "bignumber"
+        }
+      },
+      "customWidth": "25",
+      "name": "encrypted-db-count"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| extend version = tostring(properties['version'])\n| summarize Count=count() by version\n| order by version asc",
+        "size": 0,
+        "title": "SQL Server Versions",
+        "subtitle": "Distribution of SQL Server versions",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "sql-versions-chart"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| summarize Count=count() by Edition=tostring(properties['edition'])\n| order by Count desc",
+        "size": 0,
+        "title": "SQL Server Editions",
+        "subtitle": "Distribution by SQL Server edition",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "sql-editions-chart"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| extend d=parse_json(properties)\n| project \n    Name = name,\n    ResourceGroup = resourceGroup,\n    Location = location,\n    Version = tostring(d[\"version\"]),\n    Edition = tostring(d[\"edition\"]),\n    PatchLevel = tostring(d[\"patchLevel\"]),\n    LicenseType = tostring(d[\"licenseType\"]),\n    DefenderStatus = tostring(d[\"azureDefenderStatus\"])\n| order by Name asc",
+        "size": 0,
+        "title": "SQL Server Instance Inventory",
+        "subtitle": "Detailed information for all Arc-enabled SQL Server instances",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "DefenderStatus",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Protected",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "Unknown",
+                    "representation": "orange",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "red",
+                    "text": "{0}{1}"
+                  }
+                ]
+              }
+            }
+          ],
+          "filter": true
+        }
+      },
+      "name": "detailed-inventory-grid"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Resource Graph"
+  ],
+  "$schema": "https://raw.githubusercontent.com/Microsoft/Application-Insights-Workbooks/master/schema/workbook.json"
+}

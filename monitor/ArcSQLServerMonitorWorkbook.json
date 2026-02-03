@@ -268,7 +268,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server edition classification\nresources\n| where type == 'microsoft.azurearcdata/sqlserverinstances'\n| where '{ResourceGroup}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend version = tostring(properties.version)\n| extend edition = properties.edition\n| extend containerId = tolower(tostring(properties.containerResourceId))\n| extend serverClass = iff(edition in (\"Enterprise\", \"Standard\"), \"Enterprise/Standard\", \"Express/Developer/Other\") \n| summarize count() by serverClass",
+        "query": "resources\n| where type == 'microsoft.azurearcdata/sqlserverinstances'\n| extend version = tostring(properties.version)\n| extend edition = properties.edition\n| extend containerId = tolower(tostring(properties.containerResourceId))\n| extend serverClass = iff(edition in (\"Enterprise\", \"Standard\"), \"Enterprise/Standard\", \"Express/Developer/Other\") \n| summarize count() by serverClass",
         "size": 0,
         "title": "SQL Server Edition Classification",
         "subtitle": "Enterprise/Standard vs other editions",
@@ -286,7 +286,7 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "// SQL Server instance license summary\nresources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where '{ResourceGroup}' == 'value::all' or resourceGroup in ({ResourceGroup})\n| extend d=parse_json(properties) \n| extend Patch=d[\"patchLevel\"]\n| extend SQLVersion=d[\"version\"]\n| extend Edition=d[\"edition\"]\n| extend License=d[\"licenseType\"]\n| summarize InstanceCount=count() by License=tostring(License), Edition=tostring(Edition)\n| order by InstanceCount desc",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| extend d=parse_json(properties) \n| extend Patch=d[\"patchLevel\"]\n| extend SQLVersion=d[\"version\"]\n| extend Edition=d[\"edition\"]\n| extend License=d[\"licenseType\"]\n| summarize InstanceCount=count() by License=tostring(License), Edition=tostring(Edition)\n| order by InstanceCount desc",
         "size": 0,
         "title": "Instance License Summary",
         "subtitle": "License type and edition distribution",
