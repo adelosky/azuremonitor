@@ -1,0 +1,22 @@
+# VS Code workspace files
+.vscode/
+*.code-workspace
+
+# Build artifacts and temporary files
+artifacts/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
