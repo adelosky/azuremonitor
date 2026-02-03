@@ -91,16 +91,186 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| extend version = tostring(properties['version'])\n| summarize Count=count() by version\n| order by version asc",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| summarize \n    Databases=count(),\n    OfflineDBs=sum(toint(iif(tostring(properties[\"state\"]) != \"Online\", 1, 0))),\n    TotalSizeMB=sum(toint(iif(tostring(properties[\"sizeMB\"]) != \"\", properties[\"sizeMB\"], 0))) \n    by Instance = tostring(split(tostring(id), \"/\")[8])\n| extend TotalSizeGB = round(TotalSizeMB / 1024.0, 2)\n| project Instance, Databases, OfflineDBs, TotalSizeGB\n| order by TotalSizeGB desc \n| take 20",
         "size": 0,
-        "title": "SQL Server Versions",
-        "subtitle": "Distribution of SQL Server versions",
+        "title": "Database Details per SQL Server Instance",
+        "subtitle": "Top 20 instances by database size",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "TotalSizeGB",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2
+                }
+              }
+            }
+          ],
+          "filter": true
+        }
+      },
+      "name": "database-details-grid"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Configuration Analysis"
+      },
+      "name": "configuration-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| summarize Count=count() by CompatibilityLevel=tostring(properties['compatibilityLevel'])\n| order by Count desc",
+        "size": 0,
+        "title": "Database Compatibility Levels",
+        "subtitle": "Distribution of database compatibility levels",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "barchart"
+      },
+      "customWidth": "50",
+      "name": "compatibility-levels-chart"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| summarize Count=count() by LicenseType=tostring(properties['licenseType'])\n| order by Count desc",
+        "size": 0,
+        "title": "License Distribution",
+        "subtitle": "Distribution of SQL Server license types",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "barchart"
+      },
+      "customWidth": "50",
+      "name": "license-distribution-chart"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Security and Compliance"
+      },
+      "name": "security-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| summarize Count=count() by DefenderStatus=iff(tostring(properties['azureDefenderStatus'])==\"Unknown\", \"Not Protected\", tostring(properties['azureDefenderStatus']))\n| order by Count desc",
+        "size": 0,
+        "title": "Azure Defender for SQL Server",
+        "subtitle": "Protection status distribution",
         "queryType": 1,
         "resourceType": "microsoft.resourcegraph/resources",
         "visualization": "piechart"
       },
       "customWidth": "50",
-      "name": "sql-versions-chart"
+      "name": "defender-status-chart"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n| summarize Count=count() by Encrypted=iif(tostring(properties['databaseOptions'].isEncrypted)==\"false\", \"No\", \"Yes\")",
+        "size": 0,
+        "title": "Database Encryption Status",
+        "subtitle": "Encrypted vs non-encrypted databases",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "encryption-status-chart"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Licensing Information"
+      },
+      "name": "licensing-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| project \n    InstanceName = name,\n    ResourceGroup = resourceGroup,\n    Edition = tostring(properties['edition']),\n    Version = tostring(properties['version']),\n    LicenseType = tostring(properties['licenseType']),\n    vCoreCount = toint(properties['vCore']),\n    Location = location\n| order by LicenseType, Edition, InstanceName",
+        "size": 0,
+        "title": "License Details per Instance",
+        "subtitle": "Detailed licensing information for all instances",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "LicenseType",
+              "formatter": 18,
+              "formatOptions": {
+                "thresholdsOptions": "colors",
+                "thresholdsGrid": [
+                  {
+                    "operator": "==",
+                    "thresholdValue": "PAYG",
+                    "representation": "green",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "==",
+                    "thresholdValue": "LicenseOnly",
+                    "representation": "blue",
+                    "text": "{0}{1}"
+                  },
+                  {
+                    "operator": "Default",
+                    "thresholdValue": null,
+                    "representation": "gray",
+                    "text": "{0}{1}"
+                  }
+                ]
+              }
+            }
+          ],
+          "filter": true,
+          "sortBy": [
+            {
+              "itemKey": "LicenseType",
+              "sortOrder": 1
+            }
+          ]
+        }
+      },
+      "name": "license-details-grid"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Tag-based Analysis"
+      },
+      "name": "tags-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| mv-expand bagexpansion=array tags\n| summarize Count=count() by tostring(tags[0])\n| order by Count desc\n| take 10",
+        "size": 0,
+        "title": "Top 10 Tag Keys",
+        "subtitle": "Most commonly used tag keys",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "barchart"
+      },
+      "customWidth": "50",
+      "name": "top-tag-keys-chart"
     },
     {
       "type": 3,
@@ -121,10 +291,32 @@
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| extend d=parse_json(properties)\n| project \n    Name = name,\n    ResourceGroup = resourceGroup,\n    Location = location,\n    Version = tostring(d[\"version\"]),\n    Edition = tostring(d[\"edition\"]),\n    PatchLevel = tostring(d[\"patchLevel\"]),\n    LicenseType = tostring(d[\"licenseType\"]),\n    DefenderStatus = tostring(d[\"azureDefenderStatus\"])\n| order by Name asc",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| where isnotempty(tags['Environment'])\n| summarize Count=count() by Environment=tostring(tags['Environment'])\n| order by Count desc",
         "size": 0,
-        "title": "SQL Server Instance Inventory",
-        "subtitle": "Detailed information for all Arc-enabled SQL Server instances",
+        "title": "Environment Distribution",
+        "subtitle": "Instances by environment tag",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "environment-distribution-chart"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Complete Resource Analysis"
+      },
+      "name": "complete-analysis-section"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\n| where type == \"microsoft.azurearcdata/sqlserverinstances\"\n| join kind=leftouter (\n    resources\n    | where type == \"microsoft.azurearcdata/sqlserverinstances/databases\"\n    | summarize \n        DatabaseCount=count(),\n        TotalSizeGB=round(sum(toint(iif(tostring(properties['sizeMB']) != \"\", properties['sizeMB'], 0))) / 1024.0, 2)\n        by InstanceId = tostring(split(tostring(id), \"/databases/\")[0])\n) on $left.id == $right.InstanceId\n| project \n    InstanceName = name,\n    ResourceGroup = resourceGroup,\n    Location = location,\n    Version = tostring(properties['version']),\n    Edition = tostring(properties['edition']),\n    LicenseType = tostring(properties['licenseType']),\n    DefenderStatus = tostring(properties['azureDefenderStatus']),\n    DatabaseCount = iif(isempty(DatabaseCount), 0, DatabaseCount),\n    TotalSizeGB = iif(isempty(TotalSizeGB), 0.0, TotalSizeGB)\n| order by DatabaseCount desc, TotalSizeGB desc",
+        "size": 0,
+        "title": "Complete SQL Server Analysis",
+        "subtitle": "Comprehensive view of all Arc-enabled SQL Server instances with database information",
         "queryType": 1,
         "resourceType": "microsoft.resourcegraph/resources",
         "visualization": "table",
@@ -156,12 +348,33 @@
                   }
                 ]
               }
+            },
+            {
+              "columnMatch": "TotalSizeGB",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "maximumFractionDigits": 2
+                }
+              }
             }
           ],
-          "filter": true
+          "filter": true,
+          "sortBy": [
+            {
+              "itemKey": "DatabaseCount",
+              "sortOrder": 2
+            },
+            {
+              "itemKey": "TotalSizeGB", 
+              "sortOrder": 2
+            }
+          ]
         }
       },
-      "name": "detailed-inventory-grid"
+      "name": "complete-analysis-grid"
     }
   ],
   "fallbackResourceIds": [
